@@ -1,7 +1,7 @@
 package com.weathersense.app.ui.components
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -19,24 +20,29 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
+
+private val CardWidth = 64.dp
+private val CardHeight = 92.dp
+private val HalfHeight = 46.dp
+private const val FlipMillis = 420
 
 /**
- * A flip clock: HH:MM with each digit on its own split-flap card.
- * The digit card is a dark rounded tile with a centre hinge line, and a
- * rotationX flip animates whenever the digit changes.
+ * Split-flap clock. Each digit is a card cut along its middle: the top half of
+ * the outgoing digit falls forward around the hinge, then the bottom half of
+ * the incoming digit drops into place behind it.
  */
 @Composable
 fun FlipClock(
@@ -68,39 +74,84 @@ fun FlipDigit(
     cardColor: Color = Color(0xFF1C1C1E),
     digitColor: Color = Color.White,
 ) {
+    // `shown` is the digit now on the card, `previous` is the one falling away.
     var shown by remember { mutableStateOf(digit) }
-    var rotation by remember { mutableFloatStateOf(0f) }
-
-    val animatedRotation by animateFloatAsState(
-        targetValue = rotation,
-        animationSpec = tween(durationMillis = 420, easing = FastOutSlowInEasing),
-        label = "flipRotation",
-    )
+    var previous by remember { mutableStateOf(digit) }
+    val progress = remember { Animatable(0f) }
 
     LaunchedEffect(digit) {
         if (digit == shown) return@LaunchedEffect
-        rotation = -88f
+        previous = shown
         shown = digit
-        delay(16)
-        rotation = 88f
-        delay(16)
-        rotation = 0f
+        progress.snapTo(0f)
+        progress.animateTo(
+            targetValue = 1f,
+            animationSpec = tween(durationMillis = FlipMillis, easing = LinearEasing),
+        )
     }
+
+    val p = progress.value
+    val flipping = p > 0f && p < 1f
 
     Box(
         modifier = Modifier
             .padding(horizontal = 4.dp)
-            .width(64.dp)
-            .height(92.dp)
-            .background(
-                brush = Brush.verticalGradient(
-                    listOf(cardColor.lighten(0.10f), cardColor, cardColor.darken(0.08f)),
-                ),
-                shape = RoundedCornerShape(10.dp),
-            ),
-        contentAlignment = Alignment.Center,
+            .width(CardWidth)
+            .height(CardHeight),
     ) {
-        // Hinge line across the middle of the card.
+        // Back layer: the incoming digit's top half, revealed as the flap falls.
+        FlipHalf(
+            digit = shown,
+            topHalf = true,
+            cardColor = cardColor,
+            digitColor = digitColor,
+            modifier = Modifier.align(Alignment.TopCenter),
+        )
+
+        // Back layer: the outgoing digit's bottom half until the new flap lands.
+        FlipHalf(
+            digit = if (p < 0.5f) previous else shown,
+            topHalf = false,
+            cardColor = cardColor,
+            digitColor = digitColor,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
+
+        if (flipping) {
+            if (p < 0.5f) {
+                // First half of the cycle: old top half rotates down to edge-on.
+                FlipHalf(
+                    digit = previous,
+                    topHalf = true,
+                    cardColor = cardColor,
+                    digitColor = digitColor,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .graphicsLayer {
+                            transformOrigin = TransformOrigin(0.5f, 1f)
+                            rotationX = -p * 180f
+                            cameraDistance = 14f * density
+                        },
+                )
+            } else {
+                // Second half: new bottom half swings from edge-on down to flat.
+                FlipHalf(
+                    digit = shown,
+                    topHalf = false,
+                    cardColor = cardColor,
+                    digitColor = digitColor,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .graphicsLayer {
+                            transformOrigin = TransformOrigin(0.5f, 0f)
+                            rotationX = (1f - p) * 180f
+                            cameraDistance = 14f * density
+                        },
+                )
+            }
+        }
+
+        // Hinge line between the two halves.
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -108,17 +159,53 @@ fun FlipDigit(
                 .background(Color.Black.copy(alpha = 0.55f))
                 .align(Alignment.Center),
         )
-        Text(
-            text = shown,
-            modifier = Modifier.graphicsLayer {
-                rotationX = animatedRotation
-                cameraDistance = 16f * density
-            },
-            fontSize = 52.sp,
-            fontWeight = FontWeight.Bold,
-            color = digitColor,
-            maxLines = 1,
-        )
+    }
+}
+
+/** One horizontal half of a flip card, clipped so the digit is cut at the hinge. */
+@Composable
+private fun FlipHalf(
+    digit: String,
+    topHalf: Boolean,
+    cardColor: Color,
+    digitColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    val shape = if (topHalf) {
+        RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp)
+    } else {
+        RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp)
+    }
+
+    val gradient = if (topHalf) {
+        listOf(cardColor.lighten(0.08f), cardColor)
+    } else {
+        listOf(cardColor.darken(0.04f), cardColor.darken(0.16f))
+    }
+
+    Box(
+        modifier = modifier
+            .width(CardWidth)
+            .height(HalfHeight)
+            .clip(shape)
+            .background(Brush.verticalGradient(gradient)),
+    ) {
+        // A full-height digit window, shifted so only this half shows through.
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(CardHeight)
+                .offset(y = if (topHalf) 0.dp else -HalfHeight),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = digit,
+                fontSize = 52.sp,
+                fontWeight = FontWeight.Bold,
+                color = digitColor,
+                maxLines = 1,
+            )
+        }
     }
 }
 

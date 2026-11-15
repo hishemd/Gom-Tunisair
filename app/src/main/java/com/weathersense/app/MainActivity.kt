@@ -32,6 +32,7 @@ import com.weathersense.app.service.WeatherApiService
 import com.weathersense.app.ui.screen.WeatherSenseApp
 import com.weathersense.app.ui.theme.WeatherSenseTheme
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -41,6 +42,10 @@ class MainActivity : ComponentActivity() {
 
     private var state by mutableStateOf<UiState>(UiState.Loading)
     private var cityName by mutableStateOf("")
+
+    private var lastLat: Double? = null
+    private var lastLon: Double? = null
+    private var lastCity: String = ""
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
@@ -75,6 +80,37 @@ class MainActivity : ComponentActivity() {
         }
 
         requestLocation()
+        startAutoRefresh()
+    }
+
+    /**
+     * Re-fetches from the last known coordinates without touching the location
+     * stack, so the day/night icon and backdrop follow the clock while the app
+     * stays open.
+     */
+    private fun startAutoRefresh() {
+        lifecycleScope.launch {
+            while (true) {
+                delay(15 * 60 * 1000L)
+                refreshWeatherOnly()
+            }
+        }
+    }
+
+    private fun refreshWeatherOnly() {
+        val lat = lastLat ?: return
+        val lon = lastLon ?: return
+        val name = lastCity
+
+        lifecycleScope.launch {
+            val weather = withContext(Dispatchers.IO) {
+                WeatherApiService.fetchWeather(lat, lon, name)
+            }
+            val forecast = withContext(Dispatchers.IO) {
+                WeatherApiService.fetchForecast(lat, lon)
+            }
+            if (weather != null) state = UiState.Ready(weather, name, forecast)
+        }
     }
 
     private fun requestLocation() {
@@ -114,6 +150,9 @@ class MainActivity : ComponentActivity() {
                 )
             }
             cityName = name
+            lastLat = lat
+            lastLon = lon
+            lastCity = name
 
             val weather = withContext(Dispatchers.IO) {
                 WeatherApiService.fetchWeather(lat, lon, name)

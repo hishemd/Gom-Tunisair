@@ -9,7 +9,7 @@
 ### المزايا
 
 - **خلفية متحركة تتبع حالة الطقس**: تدرّج لوني وحركة مختلفة لكل حالة — شمس تدور أشعتها وتنبض، نجوم تلمع مع القمر ليلًا، غيوم تنجرف، مطر متساقط، ثلج يتمايل، ضباب ينزلق، وبرق يومض في العواصف. كلها مرسومة بـ `Canvas` دون أي صور أو ملفات وسائط.
-- **ساعة Flip Clock**: كل رقم على بطاقة منفصلة بخط مفصل في المنتصف، وتدوير ثلاثي الأبعاد (`rotationX`) عند تغيّر الرقم.
+- **ساعة قلابة حقيقية (Split-flap)**: كل رقم بطاقة مقسومة نصفين حول مفصل أفقي — النصف العلوي للرقم القديم يسقط للأمام، ثم يهبط نصف الرقم الجديد مكانه، مع `transformOrigin` على المفصل و`cameraDistance` لعمق حقيقي.
 - **تحديد الموقع الحالي**: يطلب إذن الموقع ويستخدم `FusedLocationProviderClient` بدقة عالية، مع رجوع إلى آخر موقع معروف عند تعذّر الحصول على موقع جديد، ثم تحويل الإحداثيات إلى اسم مدينة عبر `Geocoder`.
 - **طقس حقيقي** من [Open-Meteo](https://open-meteo.com/) **بدون مفتاح API**: الحرارة، الإحساس، الرطوبة، الرياح، الضغط، الشروق، الغروب، ومؤشر UV.
 - **توقعات 6 أيام** مع أيقونات مرسومة بالكود (`Canvas`) دون أي صور أو خطوط إيموجي.
@@ -60,7 +60,8 @@ gradle assembleDebug
 
 **Weather Sense** is an Android weather app in **Kotlin + Jetpack Compose** featuring a **flip clock** and **automatic current-location detection**.
 
-- **Flip clock**: each digit on its own split-flap card with a hinge line and a 3D `rotationX` flip on change.
+- **Real split-flap clock**: every digit is a card split along a horizontal hinge — the outgoing top half falls forward around the hinge, then the incoming bottom half drops into place.
+- **Day/night aware**: icons and the backdrop follow Open-Meteo's `is_day` flag, so a clear night draws a crescent moon and stars instead of a sun, and the scene refreshes every 15 minutes while the app is open.
 - **Animated weather backdrop**: each condition gets its own gradient and motion — a pulsing sun with rotating rays, twinkling stars and a moon at night, drifting clouds, falling rain, swaying snow, sliding fog, and lightning flashes during storms. All drawn with `Canvas`; no images or media assets.
 - **Current location**: `FusedLocationProviderClient` at high accuracy, falling back to the last known location, reverse-geocoded to a city name with `Geocoder`.
 - **Real weather** from [Open-Meteo](https://open-meteo.com/) with **no API key**: temperature, feels-like, humidity, wind, pressure, sunrise, sunset and UV index.
