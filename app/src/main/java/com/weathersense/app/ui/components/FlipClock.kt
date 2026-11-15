@@ -3,12 +3,21 @@ package com.weathersense.app.ui.components
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -17,37 +26,32 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.clipPath
-import androidx.compose.ui.graphics.drawscope.clipRect
-import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.TextLayoutResult
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 private const val FlipMillis = 430
-private val CardColor = Color(0xFF17181C)
-private val DigitColor = Color(0xFFF8F8FA)
+private val CardCorner = 14.dp
+
+private val TopGradient = listOf(Color(0xFF2B2C31), Color(0xFF1D1E23))
+private val BottomGradient = listOf(Color(0xFF17181C), Color(0xFF0D0E11))
 
 /**
- * Split-flap clock drawn entirely on a Canvas with a TextMeasurer.
+ * Split-flap clock.
  *
- * Drawing the digits directly (rather than laying out a Text that overflows its
- * half) keeps the halves exactly aligned at the hinge whatever the system font
- * scale is: the glyph is measured once and then painted twice through clipRect.
+ * A card is two clipped halves. Each half lays out the digit at the FULL card
+ * height (requiredHeight, which ignores the parent's max constraint) and then
+ * clips to its own half, so the glyph is cut exactly at the hinge.
+ *
+ * The font size is divided by the system fontScale, so a large accessibility
+ * font setting cannot make the digits grow out of their cards.
  */
 @Composable
 fun FlipClock(
@@ -64,23 +68,31 @@ fun FlipClock(
         val available = maxWidth - colonWidth - gap * 8f
         val cardWidth = (available / 4f).coerceIn(42.dp, 74.dp)
         val cardHeight = cardWidth * 1.42f
+        val fontScale = LocalDensity.current.fontScale
+        val digitSize = ((cardHeight.value * 0.95f) / fontScale).sp
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            FlipCard(hours.getOrNull(0)?.toString() ?: "-", cardWidth, cardHeight)
-            FlipCard(hours.getOrNull(1)?.toString() ?: "-", cardWidth, cardHeight)
+            FlipCard(hours.getOrNull(0)?.toString() ?: "-", cardWidth, cardHeight, digitSize, gap)
+            FlipCard(hours.getOrNull(1)?.toString() ?: "-", cardWidth, cardHeight, digitSize, gap)
             Colon(cardHeight)
-            FlipCard(minutes.getOrNull(0)?.toString() ?: "-", cardWidth, cardHeight)
-            FlipCard(minutes.getOrNull(1)?.toString() ?: "-", cardWidth, cardHeight)
+            FlipCard(minutes.getOrNull(0)?.toString() ?: "-", cardWidth, cardHeight, digitSize, gap)
+            FlipCard(minutes.getOrNull(1)?.toString() ?: "-", cardWidth, cardHeight, digitSize, gap)
         }
     }
 }
 
 @Composable
-private fun FlipCard(digit: String, width: Dp, height: Dp) {
+private fun FlipCard(
+    digit: String,
+    width: Dp,
+    height: Dp,
+    digitSize: androidx.compose.ui.unit.TextUnit,
+    gap: Dp,
+) {
     var shown by remember { mutableStateOf(digit) }
     var previous by remember { mutableStateOf(digit) }
     val progress = remember { Animatable(0f) }
@@ -96,143 +108,133 @@ private fun FlipCard(digit: String, width: Dp, height: Dp) {
         )
     }
 
-    val measurer = rememberTextMeasurer(cacheSize = 12)
-    val density = LocalDensity.current
-    val fontScale = density.fontScale
+    val p = progress.value
+    val half = height / 2f
+    val shape = RoundedCornerShape(CardCorner)
 
-    // Font size expressed in card units and divided by fontScale, so a large
-    // system font setting cannot blow the digits out of their cards.
-    val fontSize = ((height.value * 0.98f) / fontScale).sp
-    val style = TextStyle(
-        fontSize = fontSize,
-        fontWeight = FontWeight.Black,
-        color = DigitColor,
-    )
-
-    val shownLayout = remember(shown, fontSize) {
-        measurer.measure(AnnotatedString(shown), style, maxLines = 1, softWrap = false)
-    }
-    val previousLayout = remember(previous, fontSize) {
-        measurer.measure(AnnotatedString(previous), style, maxLines = 1, softWrap = false)
-    }
-
-    Canvas(modifier = Modifier.size(width, height)) {
-        // Read the animation inside the draw scope: reading it during composition
-        // would recompose the whole clock on every frame.
-        val p = progress.value
-        val w = size.width
-        val h = size.height
-        val half = h / 2f
-        val radius = 14.dp.toPx()
-
-        // Card background: top half catches the light, bottom half falls away.
-        val cardPath = Path().apply {
-            addRoundRect(
-                androidx.compose.ui.geometry.RoundRect(
-                    left = 0f,
-                    top = 0f,
-                    right = w,
-                    bottom = h,
-                    cornerRadius = CornerRadius(radius, radius),
-                ),
-            )
-        }
-
-        clipPath(cardPath) {
-            drawRect(
-                brush = Brush.verticalGradient(
-                    colors = listOf(Color(0xFF26272C), Color(0xFF1B1C21)),
-                    startY = 0f,
-                    endY = half,
-                ),
-                size = Size(w, half),
-            )
-            drawRect(
-                brush = Brush.verticalGradient(
-                    colors = listOf(Color(0xFF141519), Color(0xFF0C0D10)),
-                    startY = half,
-                    endY = h,
-                ),
-                topLeft = Offset(0f, half),
-                size = Size(w, half),
-            )
-        }
-
-        // Hinge: dark seam plus a faint highlight underneath.
-        drawLine(
-            color = Color.Black.copy(alpha = 0.75f),
-            start = Offset(0f, half),
-            end = Offset(w, half),
-            strokeWidth = 2.dp.toPx(),
-        )
-        drawLine(
-            color = Color.White.copy(alpha = 0.05f),
-            start = Offset(0f, half + 1.dp.toPx()),
-            end = Offset(w, half + 1.dp.toPx()),
-            strokeWidth = 1.dp.toPx(),
+    Box(
+        modifier = Modifier
+            .padding(horizontal = gap)
+            .width(width)
+            .height(height)
+            .clipToBounds()
+            .background(Brush.verticalGradient(BottomGradient), shape),
+    ) {
+        // Incoming top half sits behind, revealed as the old flap falls.
+        HalfFace(
+            digit = shown,
+            top = true,
+            width = width,
+            height = height,
+            half = half,
+            digitSize = digitSize,
+            alpha = 1f,
+            modifier = Modifier.align(Alignment.TopCenter),
         )
 
-        val hinge = Offset(w / 2f, half)
+        // Bottom half: old digit until the new flap lands.
+        HalfFace(
+            digit = if (p < 0.5f) previous else shown,
+            top = false,
+            width = width,
+            height = height,
+            half = half,
+            digitSize = digitSize,
+            alpha = 1f,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
 
-        if (p <= 0f) {
-            drawHalf(shownLayout, w, h, half, top = true)
-            drawHalf(shownLayout, w, h, half, top = false)
-        } else if (p < 0.5f) {
-            // Incoming top half sits behind, the outgoing one tips forward.
-            drawHalf(shownLayout, w, h, half, top = true)
-            scale(
-                scaleX = 1f,
-                scaleY = (1f - p * 2f).coerceAtLeast(0.001f),
-                pivot = hinge,
-            ) {
-                drawHalf(previousLayout, w, h, half, top = true)
-            }
-            drawHalf(previousLayout, w, h, half, top = false)
-        } else {
-            drawHalf(shownLayout, w, h, half, top = true)
-            drawHalf(previousLayout, w, h, half, top = false)
-            scale(
-                scaleX = 1f,
-                scaleY = ((p - 0.5f) * 2f).coerceAtLeast(0.001f),
-                pivot = hinge,
-            ) {
-                drawHalf(shownLayout, w, h, half, top = false)
+        if (p > 0f && p < 1f) {
+            if (p < 0.5f) {
+                HalfFace(
+                    digit = previous,
+                    top = true,
+                    width = width,
+                    height = height,
+                    half = half,
+                    digitSize = digitSize,
+                    alpha = 1f,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .graphicsLayer {
+                            transformOrigin = TransformOrigin(0.5f, 1f)
+                            rotationX = -p * 180f
+                            cameraDistance = 20f * density
+                        },
+                )
+            } else {
+                HalfFace(
+                    digit = shown,
+                    top = false,
+                    width = width,
+                    height = height,
+                    half = half,
+                    digitSize = digitSize,
+                    alpha = 1f,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .graphicsLayer {
+                            transformOrigin = TransformOrigin(0.5f, 0f)
+                            rotationX = (1f - p) * 180f
+                            cameraDistance = 20f * density
+                        },
+                )
             }
         }
 
-        // Soft shading on whichever half is moving, for a sense of depth.
-        val movingAlpha = when {
-            p <= 0f || p >= 1f -> 0f
-            else -> 0.30f * (1f - kotlin.math.abs(p * 2f - 1f))
-        }
-        if (movingAlpha > 0.01f) {
-            val movingTop = p < 0.5f
-            drawRect(
-                color = Color.Black.copy(alpha = movingAlpha * 0.6f),
-                topLeft = Offset(0f, if (movingTop) 0f else half),
-                size = Size(w, half),
+        // Hinge seam.
+        Column(modifier = Modifier.align(Alignment.Center)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.5.dp)
+                    .background(Color.Black.copy(alpha = 0.7f)),
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(Color.White.copy(alpha = 0.06f)),
             )
         }
     }
 }
 
-/** Paints one measured glyph through a clip window covering half the card. */
-private fun DrawScope.drawHalf(
-    layout: TextLayoutResult,
-    width: Float,
-    height: Float,
-    half: Float,
+@Composable
+private fun HalfFace(
+    digit: String,
     top: Boolean,
+    width: Dp,
+    height: Dp,
+    half: Dp,
+    digitSize: androidx.compose.ui.unit.TextUnit,
+    alpha: Float,
+    modifier: Modifier = Modifier,
 ) {
-    val left = (width - layout.size.width) / 2f
-    val topOffset = (height - layout.size.height) / 2f
-    if (top) {
-        clipRect(left = 0f, top = 0f, right = width, bottom = half) {
-            drawText(layout, topLeft = Offset(left, topOffset))
-        }
-    } else {
-        clipRect(left = 0f, top = half, right = width, bottom = height) {
-            drawText(layout, topLeft = Offset(left, topOffset))
+    Box(
+        modifier = modifier
+            .width(width)
+            .height(half)
+            .clipToBounds()
+            .background(
+                Brush.verticalGradient(if (top) TopGradient else BottomGradient),
+            ),
+    ) {
+        Box(
+            modifier = Modifier
+                .requiredHeight(height)
+                .width(width)
+                .align(if (top) Alignment.TopCenter else Alignment.BottomCenter),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = digit,
+                fontSize = digitSize,
+                fontWeight = FontWeight.Black,
+                color = Color(0xFFF8F8FA).copy(alpha = alpha),
+                maxLines = 1,
+                softWrap = false,
+            )
         }
     }
 }
@@ -240,10 +242,13 @@ private fun DrawScope.drawHalf(
 @Composable
 private fun Colon(cardHeight: Dp) {
     val dot = (cardHeight.value * 0.085f).dp
-    Canvas(modifier = Modifier.size(width = 16.dp, height = cardHeight)) {
-        val cx = size.width / 2f
-        val gap = size.height * 0.16f
-        drawCircle(color = DigitColor, radius = dot.toPx() / 2f, center = Offset(cx, size.height / 2f - gap))
-        drawCircle(color = DigitColor, radius = dot.toPx() / 2f, center = Offset(cx, size.height / 2f + gap))
+    Column(
+        modifier = Modifier.width(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(modifier = Modifier.size(dot).background(Color(0xFFF8F8FA), RoundedCornerShape(50)))
+        Spacer(modifier = Modifier.height(cardHeight * 0.16f))
+        Box(modifier = Modifier.size(dot).background(Color(0xFFF8F8FA), RoundedCornerShape(50)))
     }
 }
