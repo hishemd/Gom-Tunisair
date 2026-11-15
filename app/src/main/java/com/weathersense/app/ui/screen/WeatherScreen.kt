@@ -25,7 +25,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -49,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import com.weathersense.app.data.model.ForecastItem
 import com.weathersense.app.data.model.WeatherData
 import com.weathersense.app.ui.components.FlipClock
+import com.weathersense.app.ui.components.WeatherBackground
 import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.LocalTime
@@ -75,7 +75,9 @@ fun WeatherSenseApp(
         }
     }
 
-    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        WeatherBackground(iconCode = weatherData.icon)
+
         Column(
             modifier = Modifier
                 .fillMaxSize()

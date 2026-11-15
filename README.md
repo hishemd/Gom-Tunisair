@@ -8,6 +8,7 @@
 
 ### المزايا
 
+- **خلفية متحركة تتبع حالة الطقس**: تدرّج لوني وحركة مختلفة لكل حالة — شمس تدور أشعتها وتنبض، نجوم تلمع مع القمر ليلًا، غيوم تنجرف، مطر متساقط، ثلج يتمايل، ضباب ينزلق، وبرق يومض في العواصف. كلها مرسومة بـ `Canvas` دون أي صور أو ملفات وسائط.
 - **ساعة Flip Clock**: كل رقم على بطاقة منفصلة بخط مفصل في المنتصف، وتدوير ثلاثي الأبعاد (`rotationX`) عند تغيّر الرقم.
 - **تحديد الموقع الحالي**: يطلب إذن الموقع ويستخدم `FusedLocationProviderClient` بدقة عالية، مع رجوع إلى آخر موقع معروف عند تعذّر الحصول على موقع جديد، ثم تحويل الإحداثيات إلى اسم مدينة عبر `Geocoder`.
 - **طقس حقيقي** من [Open-Meteo](https://open-meteo.com/) **بدون مفتاح API**: الحرارة، الإحساس، الرطوبة، الرياح، الضغط، الشروق، الغروب، ومؤشر UV.
@@ -25,6 +26,7 @@ app/src/main/java/com/weathersense/app/
   location/WeatherLocationManager.kt   الموقع الحالي + تحويل الإحداثيات إلى مدينة
   service/WeatherApiService.kt    عميل Open-Meteo وتحليل JSON
   ui/components/FlipClock.kt      الساعة القلبتة
+  ui/components/WeatherBackground.kt  الخلفية المتحركة حسب حالة الطقس
   ui/screen/WeatherScreen.kt      الواجهة الرئيسية والأيقونات
   ui/theme/Theme.kt               ألوان Material 3
 ```
@@ -59,6 +61,7 @@ gradle assembleDebug
 **Weather Sense** is an Android weather app in **Kotlin + Jetpack Compose** featuring a **flip clock** and **automatic current-location detection**.
 
 - **Flip clock**: each digit on its own split-flap card with a hinge line and a 3D `rotationX` flip on change.
+- **Animated weather backdrop**: each condition gets its own gradient and motion — a pulsing sun with rotating rays, twinkling stars and a moon at night, drifting clouds, falling rain, swaying snow, sliding fog, and lightning flashes during storms. All drawn with `Canvas`; no images or media assets.
 - **Current location**: `FusedLocationProviderClient` at high accuracy, falling back to the last known location, reverse-geocoded to a city name with `Geocoder`.
 - **Real weather** from [Open-Meteo](https://open-meteo.com/) with **no API key**: temperature, feels-like, humidity, wind, pressure, sunrise, sunset and UV index.
 - **6-day forecast** with icons drawn in `Canvas` — no image assets or emoji fonts.
