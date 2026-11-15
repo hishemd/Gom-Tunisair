@@ -36,7 +36,7 @@ gradle assembleDebug
 # الناتج: app/build/outputs/apk/debug/app-debug.apk
 ```
 
-يتطلب JDK 21 و Android SDK 35. الإصدارات المستخدمة: AGP 9.5.1، Gradle 9.9.1، Kotlin 2.1.21، Compose BOM 2026.09.00.
+يتطلب JDK 21 و Android SDK 36. الإصدارات المستخدمة: AGP 9.5.1، Gradle 9.9.1، Kotlin 2.1.21، Compose BOM 2026.06.01.
 
 > ملاحظة: AGP 9 يجلب دعم Kotlin داخليًا، لذلك لا تُضاف إضافة `org.jetbrains.kotlin.android` يدويًا، ويكفي `org.jetbrains.kotlin.plugin.compose`.
 
@@ -65,6 +65,6 @@ gradle assembleDebug
 - **Explicit states**: loading, permission request, and error with retry.
 - **Material 3** light/dark theming that follows the system setting.
 
-**Build:** JDK 21, Android SDK 35 — `gradle assembleDebug`. Versions: AGP 9.5.1, Gradle 9.9.1, Kotlin 2.1.21, Compose BOM 2026.09.00.
+**Build:** JDK 21, Android SDK 36 — `gradle assembleDebug`. Versions: AGP 9.5.1, Gradle 9.9.1, Kotlin 2.1.21, Compose BOM 2026.06.01.
 
 **Privacy:** the location is never stored or shared with anyone except Open-Meteo (lat/lon only, to fetch the forecast). No tracking, no analytics.

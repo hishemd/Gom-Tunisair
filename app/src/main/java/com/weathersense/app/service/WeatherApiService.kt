@@ -79,8 +79,8 @@ object WeatherApiService {
             city = city,
             tempMax = daily?.let { "${round(it.getJSONArray("temperature_2m_max").getDouble(0))}°" },
             tempMin = daily?.let { "${round(it.getJSONArray("temperature_2m_min").getDouble(0))}°" },
-            sunrise = daily?.let { timeOfDay(it.getString("sunrise"), 0) },
-            sunset = daily?.let { timeOfDay(it.getString("sunset"), 0) },
+            sunrise = daily?.let { timeOfDay(it.getJSONArray("sunrise").getString(0)) },
+            sunset = daily?.let { timeOfDay(it.getJSONArray("sunset").getString(0)) },
             pressure = "${round(current.optDouble("surface_pressure", 0.0))} hPa",
             visibility = null,
             uvIndex = daily?.let { "${round(it.getJSONArray("uv_index_max").getDouble(0))}" },
@@ -117,7 +117,7 @@ object WeatherApiService {
         }
     }
 
-    private fun timeOfDay(iso: String, index: Int): String =
+    private fun timeOfDay(iso: String): String =
         iso.substringAfter("T").take(5).ifEmpty { "--" }
 
     /** WMO weather interpretation codes -> English text. */
