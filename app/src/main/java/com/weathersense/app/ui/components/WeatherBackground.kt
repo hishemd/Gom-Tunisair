@@ -41,7 +41,6 @@ fun sceneFor(iconCode: String): WeatherScene = when {
     iconCode.startsWith("11") -> WeatherScene.THUNDER
     iconCode.startsWith("13") -> WeatherScene.SNOW
     iconCode.startsWith("50") -> WeatherScene.FOG
-    iconCode.startsWith("02") || iconCode.startsWith("03") || iconCode.startsWith("04") -> WeatherScene.CLOUDY
     else -> WeatherScene.CLOUDY
 }
 
@@ -49,45 +48,45 @@ private data class ScenePalette(val top: Color, val bottom: Color, val accent: C
 
 private fun paletteFor(scene: WeatherScene, dark: Boolean): ScenePalette = when (scene) {
     WeatherScene.CLEAR_DAY -> if (dark) {
-        ScenePalette(Color(0xFF0B2A52), Color(0xFF2C6EA6), Color(0xFFFFD54F))
+        ScenePalette(Color(0xFF08203F), Color(0xFF2C6EA6), Color(0xFFFFD54F))
     } else {
-        ScenePalette(Color(0xFF5FB2EC), Color(0xFFD6ECFB), Color(0xFFFFC107))
+        ScenePalette(Color(0xFF4FA3E3), Color(0xFFCFE8F8), Color(0xFFFFC107))
     }
 
     WeatherScene.CLEAR_NIGHT -> if (dark) {
-        ScenePalette(Color(0xFF040A1F), Color(0xFF16224D), Color(0xFFC5CAE9))
+        ScenePalette(Color(0xFF030818), Color(0xFF141F45), Color(0xFFBFC7EC))
     } else {
-        ScenePalette(Color(0xFF6E7FA8), Color(0xFFD3DAEA), Color(0xFF8C9BE0))
+        ScenePalette(Color(0xFF5A6A96), Color(0xFFC9D2E6), Color(0xFF6E7FBF))
     }
 
     WeatherScene.CLOUDY -> if (dark) {
-        ScenePalette(Color(0xFF232E38), Color(0xFF54626E), Color(0xFFB0BEC5))
+        ScenePalette(Color(0xFF1E2832), Color(0xFF4E5C68), Color(0xFFB0BEC5))
     } else {
-        ScenePalette(Color(0xFF9FB1C0), Color(0xFFE3EAF0), Color(0xFF90A4AE))
+        ScenePalette(Color(0xFF93A7B7), Color(0xFFDFE7EE), Color(0xFF7E93A0))
     }
 
     WeatherScene.RAIN -> if (dark) {
-        ScenePalette(Color(0xFF0D1B25), Color(0xFF2A4557), Color(0xFF4FC3F7))
+        ScenePalette(Color(0xFF0A1620), Color(0xFF274152), Color(0xFF4FC3F7))
     } else {
-        ScenePalette(Color(0xFF6E8CA3), Color(0xFFD3E0EA), Color(0xFF29B6F6))
+        ScenePalette(Color(0xFF638199), Color(0xFFCFDDE8), Color(0xFF1E88E5))
     }
 
     WeatherScene.THUNDER -> if (dark) {
-        ScenePalette(Color(0xFF100E1A), Color(0xFF2A2440), Color(0xFFB39DDB))
+        ScenePalette(Color(0xFF0C0A14), Color(0xFF272139), Color(0xFFB39DDB))
     } else {
-        ScenePalette(Color(0xFF6A6488), Color(0xFFD6D2E6), Color(0xFF7E57C2))
+        ScenePalette(Color(0xFF5F597C), Color(0xFFCFCADE), Color(0xFF7E57C2))
     }
 
     WeatherScene.SNOW -> if (dark) {
-        ScenePalette(Color(0xFF16242F), Color(0xFF456479), Color(0xFFE1F5FE))
+        ScenePalette(Color(0xFF13212B), Color(0xFF3F5C70), Color(0xFFE1F5FE))
     } else {
-        ScenePalette(Color(0xFFAFC7D6), Color(0xFFEDF5FA), Color(0xFF90CAF9))
+        ScenePalette(Color(0xFFA6C0D1), Color(0xFFEAF3F9), Color(0xFF4FC3F7))
     }
 
     WeatherScene.FOG -> if (dark) {
-        ScenePalette(Color(0xFF262A2E), Color(0xFF4B5157), Color(0xFFCFD8DC))
+        ScenePalette(Color(0xFF22262A), Color(0xFF474D53), Color(0xFFCFD8DC))
     } else {
-        ScenePalette(Color(0xFFB6BCC1), Color(0xFFECEFF1), Color(0xFF90A4AE))
+        ScenePalette(Color(0xFFAEB5BA), Color(0xFFE9ECEF), Color(0xFF8A959C))
     }
 }
 
@@ -97,8 +96,8 @@ private class Cloud(val x: Float, val y: Float, val radius: Float, val alpha: Fl
 private class Star(val x: Float, val y: Float, val radius: Float, val phase: Float)
 
 /**
- * Full-bleed animated backdrop for the weather screen. Everything is drawn with
- * Canvas primitives, so there are no image assets and nothing to download.
+ * Full-bleed animated backdrop for the weather screen. Every shape is drawn
+ * with Canvas primitives, so there are no image assets and nothing to download.
  */
 @Composable
 fun WeatherBackground(
@@ -111,29 +110,40 @@ fun WeatherBackground(
 
     val transition = rememberInfiniteTransition(label = "weatherBg")
 
-    // Slow drift for clouds, rays and haze (30 s per cycle).
+    // Sun ray rotation and slow haze drift.
     val slow by transition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 30_000, easing = LinearEasing),
+            animation = tween(durationMillis = 26_000, easing = LinearEasing),
             repeatMode = RepeatMode.Restart,
         ),
         label = "slow",
     )
 
-    // Medium cycle for snowfall and star twinkle (9 s).
+    // Cloud drift — fast enough to notice without feeling busy.
+    val drift by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 16_000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "drift",
+    )
+
+    // Snowfall and star twinkle.
     val mid by transition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 9_000, easing = LinearEasing),
+            animation = tween(durationMillis = 8_000, easing = LinearEasing),
             repeatMode = RepeatMode.Restart,
         ),
         label = "mid",
     )
 
-    // Fast cycle for rain (1.4 s).
+    // Rain.
     val fast by transition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
@@ -144,7 +154,7 @@ fun WeatherBackground(
         label = "fast",
     )
 
-    // Occasional lightning flash, only used by the thunderstorm scene.
+    // Lightning.
     val flash by transition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
@@ -162,6 +172,23 @@ fun WeatherBackground(
             repeatMode = RepeatMode.Restart,
         ),
         label = "flash",
+    )
+
+    // A shooting star every ~11 s on clear nights.
+    val meteor by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                durationMillis = 11_000
+                0f at 0
+                0f at 7_000
+                1f at 8_600
+                1f at 11_000
+            },
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "meteor",
     )
 
     val drops = remember {
@@ -195,25 +222,40 @@ fun WeatherBackground(
         List(5) {
             Cloud(
                 x = rnd.nextFloat(),
-                y = 0.10f + rnd.nextFloat() * 0.42f,
-                radius = 0.24f + rnd.nextFloat() * 0.26f,
+                y = 0.10f + rnd.nextFloat() * 0.34f,
+                radius = 0.22f + rnd.nextFloat() * 0.24f,
                 alpha = 0.10f + rnd.nextFloat() * 0.16f,
-                speed = 0.25f + rnd.nextFloat() * 0.45f,
+                speed = 0.30f + rnd.nextFloat() * 0.50f,
+            )
+        }
+    }
+
+    val wispy = remember {
+        val rnd = Random(41)
+        List(3) {
+            Cloud(
+                x = rnd.nextFloat(),
+                y = 0.16f + rnd.nextFloat() * 0.40f,
+                radius = 0.26f + rnd.nextFloat() * 0.18f,
+                alpha = 0.06f + rnd.nextFloat() * 0.05f,
+                speed = 0.20f + rnd.nextFloat() * 0.30f,
             )
         }
     }
 
     val stars = remember {
         val rnd = Random(31)
-        List(46) {
+        List(60) {
             Star(
                 x = rnd.nextFloat(),
-                y = rnd.nextFloat() * 0.62f,
-                radius = 0.9f + rnd.nextFloat() * 2.2f,
+                y = rnd.nextFloat() * 0.66f,
+                radius = 0.9f + rnd.nextFloat() * 2.4f,
                 phase = rnd.nextFloat() * 6.28f,
             )
         }
     }
+
+    val scrim = if (dark) 0.16f else 0.20f
 
     Box(
         modifier = modifier
@@ -226,20 +268,29 @@ fun WeatherBackground(
             val unit = min(w, h)
 
             when (scene) {
-                WeatherScene.CLEAR_DAY -> drawSun(unit, w, palette.accent, slow)
-                WeatherScene.CLEAR_NIGHT -> drawNight(unit, w, h, stars, mid)
+                WeatherScene.CLEAR_DAY -> {
+                    drawSun(unit, w, palette.accent, slow)
+                    drawClouds(wispy, unit, w, h, drift, 0.9f)
+                }
+
+                WeatherScene.CLEAR_NIGHT -> {
+                    drawNight(w, h, unit, stars, mid, palette, dark)
+                    drawClouds(wispy, unit, w, h, drift, 0.7f)
+                    drawMeteor(meteor, w, h)
+                }
+
                 WeatherScene.CLOUDY -> {
                     drawSun(unit, w, palette.accent, slow, softened = true)
-                    drawClouds(clouds, unit, w, h, slow, 0.85f)
+                    drawClouds(clouds, unit, w, h, drift, 0.95f)
                 }
 
                 WeatherScene.RAIN -> {
-                    drawClouds(clouds, unit, w, h, slow, 1f)
+                    drawClouds(clouds, unit, w, h, drift, 1.05f)
                     drawRain(drops, w, h, fast)
                 }
 
                 WeatherScene.THUNDER -> {
-                    drawClouds(clouds, unit, w, h, slow, 1.15f)
+                    drawClouds(clouds, unit, w, h, drift, 1.15f)
                     drawRain(drops, w, h, fast)
                     if (flash > 0.01f) {
                         drawRect(Color.White.copy(alpha = flash * 0.30f))
@@ -247,7 +298,7 @@ fun WeatherBackground(
                 }
 
                 WeatherScene.SNOW -> {
-                    drawClouds(clouds, unit, w, h, slow, 0.7f)
+                    drawClouds(clouds, unit, w, h, drift, 0.75f)
                     drawSnow(flakes, w, h, mid)
                 }
 
@@ -255,42 +306,33 @@ fun WeatherBackground(
             }
         }
 
-        // Keeps text readable over every palette without muting the animation.
+        // Keeps text readable over every palette without muting the motion.
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.30f)),
+                .background(MaterialTheme.colorScheme.background.copy(alpha = scrim)),
         )
     }
 }
 
-private fun DrawScope.drawSun(
-    unit: Float,
-    width: Float,
-    accent: Color,
-    phase: Float,
-    softened: Boolean = false,
-) {
-    val center = Offset(width * 0.80f, unit * 0.20f)
-    val baseRadius = unit * if (softened) 0.16f else 0.22f
-    val pulse = 1f + 0.04f * sin(phase * 2f * PI.toFloat())
+private fun DrawScope.drawSun(unit: Float, width: Float, accent: Color, phase: Float, softened: Boolean = false) {
+    val center = Offset(width * 0.82f, unit * 0.13f)
+    val baseRadius = unit * if (softened) 0.13f else 0.15f
+    val pulse = 1f + 0.05f * sin(phase * 2f * PI.toFloat())
 
     drawCircle(
         brush = Brush.radialGradient(
-            colors = listOf(
-                accent.copy(alpha = if (softened) 0.22f else 0.34f),
-                Color.Transparent,
-            ),
+            colors = listOf(accent.copy(alpha = if (softened) 0.20f else 0.32f), Color.Transparent),
             center = center,
-            radius = baseRadius * 2.6f * pulse,
+            radius = baseRadius * 3.0f * pulse,
         ),
-        radius = baseRadius * 2.6f * pulse,
+        radius = baseRadius * 3.0f * pulse,
         center = center,
     )
 
     drawCircle(
         brush = Brush.radialGradient(
-            colors = listOf(Color.White.copy(alpha = 0.55f), accent.copy(alpha = 0.35f)),
+            colors = listOf(Color.White.copy(alpha = 0.70f), accent.copy(alpha = 0.45f)),
             center = center,
             radius = baseRadius * pulse,
         ),
@@ -305,15 +347,9 @@ private fun DrawScope.drawSun(
                 val c = cos(angle).toFloat()
                 val s = sin(angle).toFloat()
                 drawLine(
-                    color = accent.copy(alpha = 0.35f),
-                    start = Offset(
-                        center.x + c * baseRadius * 1.28f,
-                        center.y + s * baseRadius * 1.28f,
-                    ),
-                    end = Offset(
-                        center.x + c * baseRadius * 1.62f,
-                        center.y + s * baseRadius * 1.62f,
-                    ),
+                    color = accent.copy(alpha = 0.40f),
+                    start = Offset(center.x + c * baseRadius * 1.35f, center.y + s * baseRadius * 1.35f),
+                    end = Offset(center.x + c * baseRadius * 1.75f, center.y + s * baseRadius * 1.75f),
                     strokeWidth = 3f,
                     cap = StrokeCap.Round,
                 )
@@ -323,33 +359,74 @@ private fun DrawScope.drawSun(
 }
 
 private fun DrawScope.drawNight(
-    unit: Float,
     width: Float,
     height: Float,
+    unit: Float,
     stars: List<Star>,
     phase: Float,
+    palette: ScenePalette,
+    dark: Boolean,
 ) {
+    // Twinkling stars — stronger amplitude so the sky clearly breathes.
     stars.forEach { star ->
-        val twinkle = 0.35f + 0.65f * ((sin(phase * 2f * PI.toFloat() + star.phase) + 1f) / 2f)
+        val twinkle = 0.25f + 0.75f * ((sin(phase * 2f * PI.toFloat() + star.phase) + 1f) / 2f)
+        val color = if (dark) Color.White else palette.accent
         drawCircle(
-            color = Color.White.copy(alpha = 0.55f * twinkle),
+            color = color.copy(alpha = (if (dark) 0.75f else 0.55f) * twinkle),
             radius = star.radius,
             center = Offset(star.x * width, star.y * height),
         )
     }
 
-    val moon = Offset(width * 0.78f, unit * 0.18f)
-    val moonRadius = unit * 0.11f
+    // Moon: small, high in the corner, with a soft halo instead of a hard disc.
+    val moon = Offset(width * 0.84f, unit * 0.09f)
+    val moonRadius = unit * 0.052f
+
     drawCircle(
         brush = Brush.radialGradient(
-            colors = listOf(Color.White.copy(alpha = 0.28f), Color.Transparent),
+            colors = listOf(Color.White.copy(alpha = 0.22f), Color.Transparent),
             center = moon,
-            radius = moonRadius * 2.8f,
+            radius = moonRadius * 4.2f,
         ),
-        radius = moonRadius * 2.8f,
+        radius = moonRadius * 4.2f,
         center = moon,
     )
-    drawCircle(color = Color(0xFFF3F1E7).copy(alpha = 0.92f), radius = moonRadius, center = moon)
+    drawCircle(
+        brush = Brush.radialGradient(
+            colors = listOf(
+                Color(0xFFFDFCF4).copy(alpha = 0.95f),
+                Color(0xFFE8E4D2).copy(alpha = 0.70f),
+            ),
+            center = moon,
+            radius = moonRadius,
+        ),
+        radius = moonRadius,
+        center = moon,
+    )
+}
+
+private fun DrawScope.drawMeteor(progress: Float, width: Float, height: Float) {
+    // Only visible during the short streak window.
+    if (progress <= 0f || progress >= 1f) return
+    val travel = progress
+    if (travel < 0.001f) return
+
+    val headX = width * (0.12f + 0.62f * travel)
+    val headY = height * (0.06f + 0.20f * travel)
+    val tailLength = width * 0.13f
+
+    drawLine(
+        brush = Brush.linearGradient(
+            colors = listOf(Color.Transparent, Color.White.copy(alpha = 0.85f)),
+            start = Offset(headX - tailLength, headY - tailLength * 0.32f),
+            end = Offset(headX, headY),
+        ),
+        start = Offset(headX - tailLength, headY - tailLength * 0.32f),
+        end = Offset(headX, headY),
+        strokeWidth = 2.4f,
+        cap = StrokeCap.Round,
+    )
+    drawCircle(color = Color.White.copy(alpha = 0.9f), radius = 2.6f, center = Offset(headX, headY))
 }
 
 private fun DrawScope.drawClouds(

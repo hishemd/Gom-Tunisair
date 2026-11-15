@@ -6,13 +6,15 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,50 +33,65 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private val CardWidth = 64.dp
-private val CardHeight = 92.dp
-private val HalfHeight = 46.dp
-private const val FlipMillis = 420
+private val FlipMillis = 430
+private val CardCorner = 16.dp
 
 /**
- * Split-flap clock. Each digit is a card cut along its middle: the top half of
- * the outgoing digit falls forward around the hinge, then the bottom half of
- * the incoming digit drops into place behind it.
+ * Split-flap clock. Each digit is a card cut along a horizontal hinge: the top
+ * half of the outgoing digit falls forward around that hinge, then the bottom
+ * half of the incoming digit swings down into place.
+ *
+ * The card size is derived from the width the clock is given, so four digits
+ * plus the colon always fit and never look cramped on a narrow screen.
  */
 @Composable
 fun FlipClock(
     time: String,
     modifier: Modifier = Modifier,
-    cardColor: Color = Color(0xFF1C1C1E),
-    digitColor: Color = Color.White,
+    cardColor: Color = Color(0xFF17171A),
+    digitColor: Color = Color(0xFFF7F7FA),
 ) {
     val parts = time.split(":")
     val hours = parts.getOrNull(0) ?: "--"
     val minutes = parts.getOrNull(1) ?: "--"
 
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
-    ) {
-        FlipDigit(hours.getOrNull(0)?.toString() ?: "-", cardColor, digitColor)
-        FlipDigit(hours.getOrNull(1)?.toString() ?: "-", cardColor, digitColor)
-        Colon(digitColor)
-        FlipDigit(minutes.getOrNull(0)?.toString() ?: "-", cardColor, digitColor)
-        FlipDigit(minutes.getOrNull(1)?.toString() ?: "-", cardColor, digitColor)
+    BoxWithConstraints(modifier = modifier) {
+        val gap = 3.dp
+        val colonWidth = 18.dp
+        val available = maxWidth - colonWidth - gap * 8
+        val cardWidth = (available / 4f).coerceIn(48.dp, 84.dp)
+        val cardHeight = cardWidth * 1.5f
+        val digitSize = (cardWidth.value * 0.92f).sp
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            FlipDigit(hours.getOrNull(0)?.toString() ?: "-", cardWidth, cardHeight, digitSize, cardColor, digitColor, gap)
+            FlipDigit(hours.getOrNull(1)?.toString() ?: "-", cardWidth, cardHeight, digitSize, cardColor, digitColor, gap)
+            Colon(color = digitColor, size = cardHeight)
+            FlipDigit(minutes.getOrNull(0)?.toString() ?: "-", cardWidth, cardHeight, digitSize, cardColor, digitColor, gap)
+            FlipDigit(minutes.getOrNull(1)?.toString() ?: "-", cardWidth, cardHeight, digitSize, cardColor, digitColor, gap)
+        }
     }
 }
 
 @Composable
-fun FlipDigit(
+private fun FlipDigit(
     digit: String,
-    cardColor: Color = Color(0xFF1C1C1E),
-    digitColor: Color = Color.White,
+    cardWidth: Dp,
+    cardHeight: Dp,
+    digitSize: androidx.compose.ui.unit.TextUnit,
+    cardColor: Color,
+    digitColor: Color,
+    gap: Dp,
 ) {
-    // `shown` is the digit now on the card, `previous` is the one falling away.
+    // `shown` is the digit currently on the card, `previous` is the one leaving.
     var shown by remember { mutableStateOf(digit) }
     var previous by remember { mutableStateOf(digit) }
     val progress = remember { Animatable(0f) }
@@ -91,38 +108,49 @@ fun FlipDigit(
     }
 
     val p = progress.value
-    val flipping = p > 0f && p < 1f
+    val half = cardHeight / 2f
+    val shape = RoundedCornerShape(CardCorner)
 
     Box(
         modifier = Modifier
-            .padding(horizontal = 4.dp)
-            .width(CardWidth)
-            .height(CardHeight),
+            .padding(horizontal = gap)
+            .width(cardWidth)
+            .height(cardHeight)
+            .clip(shape),
     ) {
-        // Back layer: the incoming digit's top half, revealed as the flap falls.
+        // Incoming digit's top half, uncovered as the old flap falls away.
         FlipHalf(
             digit = shown,
             topHalf = true,
+            cardWidth = cardWidth,
+            cardHeight = cardHeight,
+            digitSize = digitSize,
             cardColor = cardColor,
             digitColor = digitColor,
             modifier = Modifier.align(Alignment.TopCenter),
         )
 
-        // Back layer: the outgoing digit's bottom half until the new flap lands.
+        // Bottom half: the old digit until the new flap lands, then the new one.
         FlipHalf(
             digit = if (p < 0.5f) previous else shown,
             topHalf = false,
+            cardWidth = cardWidth,
+            cardHeight = cardHeight,
+            digitSize = digitSize,
             cardColor = cardColor,
             digitColor = digitColor,
             modifier = Modifier.align(Alignment.BottomCenter),
         )
 
-        if (flipping) {
+        if (p > 0f && p < 1f) {
             if (p < 0.5f) {
-                // First half of the cycle: old top half rotates down to edge-on.
+                // Old top half tips forward around the hinge until edge-on.
                 FlipHalf(
                     digit = previous,
                     topHalf = true,
+                    cardWidth = cardWidth,
+                    cardHeight = cardHeight,
+                    digitSize = digitSize,
                     cardColor = cardColor,
                     digitColor = digitColor,
                     modifier = Modifier
@@ -130,14 +158,17 @@ fun FlipDigit(
                         .graphicsLayer {
                             transformOrigin = TransformOrigin(0.5f, 1f)
                             rotationX = -p * 180f
-                            cameraDistance = 14f * density
+                            cameraDistance = 16f * density
                         },
                 )
             } else {
-                // Second half: new bottom half swings from edge-on down to flat.
+                // New bottom half drops from edge-on down to flat.
                 FlipHalf(
                     digit = shown,
                     topHalf = false,
+                    cardWidth = cardWidth,
+                    cardHeight = cardHeight,
+                    digitSize = digitSize,
                     cardColor = cardColor,
                     digitColor = digitColor,
                     modifier = Modifier
@@ -145,63 +176,86 @@ fun FlipDigit(
                         .graphicsLayer {
                             transformOrigin = TransformOrigin(0.5f, 0f)
                             rotationX = (1f - p) * 180f
-                            cameraDistance = 14f * density
+                            cameraDistance = 16f * density
                         },
                 )
             }
         }
 
-        // Hinge line between the two halves.
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(Color.Black.copy(alpha = 0.55f))
-                .align(Alignment.Center),
-        )
+        // Hinge: a dark seam plus a faint highlight under it.
+        Column(modifier = Modifier.align(Alignment.Center)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.5.dp)
+                    .background(Color.Black.copy(alpha = 0.65f)),
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(Color.White.copy(alpha = 0.06f)),
+            )
+        }
     }
 }
 
-/** One horizontal half of a flip card, clipped so the digit is cut at the hinge. */
+/**
+ * One horizontal half of a flip card. The digit is laid out at full card height
+ * and then clipped, so the two halves join perfectly at the hinge.
+ */
 @Composable
 private fun FlipHalf(
     digit: String,
     topHalf: Boolean,
+    cardWidth: Dp,
+    cardHeight: Dp,
+    digitSize: androidx.compose.ui.unit.TextUnit,
     cardColor: Color,
     digitColor: Color,
     modifier: Modifier = Modifier,
 ) {
+    val half = cardHeight / 2f
     val shape = if (topHalf) {
-        RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp)
+        RoundedCornerShape(topStart = CardCorner, topEnd = CardCorner)
     } else {
-        RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp)
+        RoundedCornerShape(bottomStart = CardCorner, bottomEnd = CardCorner)
     }
 
     val gradient = if (topHalf) {
-        listOf(cardColor.lighten(0.08f), cardColor)
+        listOf(
+            cardColor.lighten(0.10f),
+            cardColor.lighten(0.04f),
+            cardColor,
+        )
     } else {
-        listOf(cardColor.darken(0.04f), cardColor.darken(0.16f))
+        listOf(
+            cardColor.darken(0.02f),
+            cardColor.darken(0.08f),
+            cardColor.darken(0.18f),
+        )
     }
 
     Box(
         modifier = modifier
-            .width(CardWidth)
-            .height(HalfHeight)
+            .requiredWidth(cardWidth)
+            .requiredHeight(half)
             .clip(shape)
             .background(Brush.verticalGradient(gradient)),
     ) {
-        // A full-height digit window, shifted so only this half shows through.
+        // requiredHeight, not height: the parent only offers half a card of
+        // space, and plain height() would be coerced down and clip the digit away.
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(CardHeight)
-                .offset(y = if (topHalf) 0.dp else -HalfHeight),
+                .requiredWidth(cardWidth)
+                .requiredHeight(cardHeight)
+                .align(if (topHalf) Alignment.TopCenter else Alignment.BottomCenter),
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = digit,
-                fontSize = 52.sp,
-                fontWeight = FontWeight.Bold,
+                fontSize = digitSize,
+                fontWeight = FontWeight.Black,
                 color = digitColor,
                 maxLines = 1,
             )
@@ -210,15 +264,16 @@ private fun FlipHalf(
 }
 
 @Composable
-fun Colon(color: Color = Color.White) {
+private fun Colon(color: Color, size: Dp) {
+    val dot = (size.value * 0.085f).dp
     Column(
-        modifier = Modifier.width(22.dp),
+        modifier = Modifier.width(18.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Box(modifier = Modifier.size(7.dp).background(color, RoundedCornerShape(50)))
-        Spacer(modifier = Modifier.height(14.dp))
-        Box(modifier = Modifier.size(7.dp).background(color, RoundedCornerShape(50)))
+        Box(modifier = Modifier.size(dot).background(color, RoundedCornerShape(50)))
+        Spacer(modifier = Modifier.height(size * 0.16f))
+        Box(modifier = Modifier.size(dot).background(color, RoundedCornerShape(50)))
     }
 }
 
