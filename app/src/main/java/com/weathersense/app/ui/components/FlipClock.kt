@@ -63,9 +63,11 @@ fun FlipClock(
         val gap = 3.dp
         val colonWidth = 18.dp
         val available = maxWidth - colonWidth - gap * 8
-        val cardWidth = (available / 4f).coerceIn(48.dp, 84.dp)
-        val cardHeight = cardWidth * 1.5f
-        val digitSize = (cardWidth.value * 0.92f).sp
+        val cardWidth = (available / 4f).coerceIn(44.dp, 72.dp)
+        val cardHeight = cardWidth * 1.45f
+        // The glyph must be taller than half a card, otherwise each half shows a
+        // whole digit instead of one cut at the hinge.
+        val digitSize = (cardHeight.value * 1.06f).sp
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -258,6 +260,7 @@ private fun FlipHalf(
                 fontWeight = FontWeight.Black,
                 color = digitColor,
                 maxLines = 1,
+                softWrap = false,
             )
         }
     }

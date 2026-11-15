@@ -236,8 +236,8 @@ fun WeatherBackground(
             Cloud(
                 x = rnd.nextFloat(),
                 y = 0.16f + rnd.nextFloat() * 0.40f,
-                radius = 0.26f + rnd.nextFloat() * 0.18f,
-                alpha = 0.06f + rnd.nextFloat() * 0.05f,
+                radius = 0.30f + rnd.nextFloat() * 0.20f,
+                alpha = 0.10f + rnd.nextFloat() * 0.08f,
                 speed = 0.20f + rnd.nextFloat() * 0.30f,
             )
         }
@@ -249,7 +249,7 @@ fun WeatherBackground(
             Star(
                 x = rnd.nextFloat(),
                 y = rnd.nextFloat() * 0.66f,
-                radius = 0.9f + rnd.nextFloat() * 2.4f,
+                radius = 1.3f + rnd.nextFloat() * 3.2f,
                 phase = rnd.nextFloat() * 6.28f,
             )
         }
@@ -275,7 +275,7 @@ fun WeatherBackground(
 
                 WeatherScene.CLEAR_NIGHT -> {
                     drawNight(w, h, unit, stars, mid, palette, dark)
-                    drawClouds(wispy, unit, w, h, drift, 0.7f)
+                    drawClouds(wispy, unit, w, h, drift, 1f)
                     drawMeteor(meteor, w, h)
                 }
 
@@ -367,28 +367,27 @@ private fun DrawScope.drawNight(
     palette: ScenePalette,
     dark: Boolean,
 ) {
-    // Twinkling stars — stronger amplitude so the sky clearly breathes.
+    // Twinkling stars — strong enough to be obvious in both themes.
     stars.forEach { star ->
         val twinkle = 0.25f + 0.75f * ((sin(phase * 2f * PI.toFloat() + star.phase) + 1f) / 2f)
-        val color = if (dark) Color.White else palette.accent
         drawCircle(
-            color = color.copy(alpha = (if (dark) 0.75f else 0.55f) * twinkle),
+            color = Color.White.copy(alpha = (if (dark) 0.90f else 0.80f) * twinkle),
             radius = star.radius,
             center = Offset(star.x * width, star.y * height),
         )
     }
 
     // Moon: small, high in the corner, with a soft halo instead of a hard disc.
-    val moon = Offset(width * 0.84f, unit * 0.09f)
-    val moonRadius = unit * 0.052f
+    val moon = Offset(width * 0.86f, unit * 0.10f)
+    val moonRadius = unit * 0.042f
 
     drawCircle(
         brush = Brush.radialGradient(
-            colors = listOf(Color.White.copy(alpha = 0.22f), Color.Transparent),
+            colors = listOf(Color.White.copy(alpha = 0.16f), Color.Transparent),
             center = moon,
-            radius = moonRadius * 4.2f,
+            radius = moonRadius * 3.4f,
         ),
-        radius = moonRadius * 4.2f,
+        radius = moonRadius * 3.4f,
         center = moon,
     )
     drawCircle(
