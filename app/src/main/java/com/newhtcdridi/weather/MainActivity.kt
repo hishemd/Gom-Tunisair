@@ -53,7 +53,7 @@ class MainActivity : Activity() {
     private var report: WeatherReport? = null
     private var loading = false
     private var lastRefreshFailed = false
-    private var cityDialog: AlertDialog?
+    private var cityDialog: AlertDialog? = null
     private var lastDateKey = ""
 
     private val root by lazy { findViewById<View>(R.id.root) }

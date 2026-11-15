@@ -31,7 +31,7 @@ object WeatherParser {
             val maxes = daily.get("temperature_2m_max")?.asArray()
             val mins = daily.get("temperature_2m_min")?.asArray()
             val count = times?.size() ?: 0
-            if (maxes != null && mins != null) {
+            if (times != null && maxes != null && mins != null) {
                 val n = minOf(count, maxes.size(), mins.size())
                 for (i in 0 until n) {
                     val dateIso = times.get(i)?.asString() ?: continue
