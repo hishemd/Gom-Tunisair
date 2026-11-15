@@ -30,8 +30,8 @@ class WeatherApiTest {
 
     @Test
     fun cityKeyIgnoresTinyDifferences() {
-        val a = City("A", "", "", 36.8061, 10.1801, null)
-        val b = City("B", "", "", 36.8059, 10.1799, null)
+        val a = City("A", "", "", 36.80651, 10.18011, null)
+        val b = City("B", "", "", 36.80654, 10.18014, null)
         assertEquals(a.key, b.key)
     }
 }
