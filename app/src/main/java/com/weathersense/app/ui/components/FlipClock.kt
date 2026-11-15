@@ -109,12 +109,17 @@ private fun FlipCard(digit: String, width: Dp, height: Dp) {
         color = DigitColor,
     )
 
-    val shownLayout = measurer.measure(AnnotatedString(shown), style, maxLines = 1, softWrap = false)
-    val previousLayout = measurer.measure(AnnotatedString(previous), style, maxLines = 1, softWrap = false)
-
-    val p = progress.value
+    val shownLayout = remember(shown, fontSize) {
+        measurer.measure(AnnotatedString(shown), style, maxLines = 1, softWrap = false)
+    }
+    val previousLayout = remember(previous, fontSize) {
+        measurer.measure(AnnotatedString(previous), style, maxLines = 1, softWrap = false)
+    }
 
     Canvas(modifier = Modifier.size(width, height)) {
+        // Read the animation inside the draw scope: reading it during composition
+        // would recompose the whole clock on every frame.
+        val p = progress.value
         val w = size.width
         val h = size.height
         val half = h / 2f

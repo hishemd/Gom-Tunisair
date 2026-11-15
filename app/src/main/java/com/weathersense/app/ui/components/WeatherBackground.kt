@@ -111,7 +111,7 @@ fun WeatherBackground(
     val transition = rememberInfiniteTransition(label = "weatherBg")
 
     // Sun ray rotation and slow haze drift.
-    val slow by transition.animateFloat(
+    val slow = transition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
@@ -122,7 +122,7 @@ fun WeatherBackground(
     )
 
     // Cloud drift — fast enough to notice without feeling busy.
-    val drift by transition.animateFloat(
+    val drift = transition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
@@ -133,7 +133,7 @@ fun WeatherBackground(
     )
 
     // Snowfall and star twinkle.
-    val mid by transition.animateFloat(
+    val mid = transition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
@@ -144,7 +144,7 @@ fun WeatherBackground(
     )
 
     // Rain.
-    val fast by transition.animateFloat(
+    val fast = transition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
@@ -155,7 +155,7 @@ fun WeatherBackground(
     )
 
     // Lightning.
-    val flash by transition.animateFloat(
+    val flash = transition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
@@ -175,7 +175,7 @@ fun WeatherBackground(
     )
 
     // A shooting star every ~11 s on clear nights.
-    val meteor by transition.animateFloat(
+    val meteor = transition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
@@ -219,7 +219,7 @@ fun WeatherBackground(
 
     val clouds = remember {
         val rnd = Random(23)
-        List(5) {
+        List(3) {
             Cloud(
                 x = rnd.nextFloat(),
                 y = 0.10f + rnd.nextFloat() * 0.34f,
@@ -232,7 +232,7 @@ fun WeatherBackground(
 
     val wispy = remember {
         val rnd = Random(41)
-        List(3) {
+        List(2) {
             Cloud(
                 x = rnd.nextFloat(),
                 y = 0.16f + rnd.nextFloat() * 0.40f,
@@ -245,7 +245,7 @@ fun WeatherBackground(
 
     val stars = remember {
         val rnd = Random(31)
-        List(60) {
+        List(40) {
             Star(
                 x = rnd.nextFloat(),
                 y = rnd.nextFloat() * 0.66f,
@@ -269,40 +269,40 @@ fun WeatherBackground(
 
             when (scene) {
                 WeatherScene.CLEAR_DAY -> {
-                    drawSun(unit, w, palette.accent, slow)
-                    drawClouds(wispy, unit, w, h, drift, 0.9f)
+                    drawSun(unit, w, palette.accent, slow.value)
+                    drawClouds(wispy, unit, w, h, drift.value, 0.9f)
                 }
 
                 WeatherScene.CLEAR_NIGHT -> {
-                    drawNight(w, h, unit, stars, mid, palette, dark)
-                    drawClouds(wispy, unit, w, h, drift, 1f)
-                    drawMeteor(meteor, w, h)
+                    drawNight(w, h, unit, stars, mid.value, palette, dark)
+                    drawClouds(wispy, unit, w, h, drift.value, 1f)
+                    drawMeteor(meteor.value, w, h)
                 }
 
                 WeatherScene.CLOUDY -> {
-                    drawSun(unit, w, palette.accent, slow, softened = true)
-                    drawClouds(clouds, unit, w, h, drift, 0.95f)
+                    drawSun(unit, w, palette.accent, slow.value, softened = true)
+                    drawClouds(clouds, unit, w, h, drift.value, 0.95f)
                 }
 
                 WeatherScene.RAIN -> {
-                    drawClouds(clouds, unit, w, h, drift, 1.05f)
-                    drawRain(drops, w, h, fast)
+                    drawClouds(clouds, unit, w, h, drift.value, 1.05f)
+                    drawRain(drops, w, h, fast.value)
                 }
 
                 WeatherScene.THUNDER -> {
-                    drawClouds(clouds, unit, w, h, drift, 1.15f)
-                    drawRain(drops, w, h, fast)
-                    if (flash > 0.01f) {
-                        drawRect(Color.White.copy(alpha = flash * 0.30f))
+                    drawClouds(clouds, unit, w, h, drift.value, 1.15f)
+                    drawRain(drops, w, h, fast.value)
+                    if (flash.value > 0.01f) {
+                        drawRect(Color.White.copy(alpha = flash.value * 0.30f))
                     }
                 }
 
                 WeatherScene.SNOW -> {
-                    drawClouds(clouds, unit, w, h, drift, 0.75f)
-                    drawSnow(flakes, w, h, mid)
+                    drawClouds(clouds, unit, w, h, drift.value, 0.75f)
+                    drawSnow(flakes, w, h, mid.value)
                 }
 
-                WeatherScene.FOG -> drawFog(w, h, slow, palette.accent)
+                WeatherScene.FOG -> drawFog(w, h, slow.value, palette.accent)
             }
         }
 
@@ -443,9 +443,9 @@ private fun DrawScope.drawClouds(
         val r = cloud.radius * unit
         val alpha = cloud.alpha * density
 
-        drawSoftBlob(Offset(cx, cy), r, Color.White.copy(alpha = alpha))
-        drawSoftBlob(Offset(cx - r * 0.72f, cy + r * 0.20f), r * 0.66f, Color.White.copy(alpha = alpha * 0.85f))
-        drawSoftBlob(Offset(cx + r * 0.78f, cy + r * 0.16f), r * 0.72f, Color.White.copy(alpha = alpha * 0.85f))
+        drawCircle(Color.White.copy(alpha = alpha), radius = r, center = Offset(cx, cy))
+        drawCircle(Color.White.copy(alpha = alpha * 0.85f), radius = r * 0.66f, center = Offset(cx - r * 0.72f, cy + r * 0.20f))
+        drawCircle(Color.White.copy(alpha = alpha * 0.85f), radius = r * 0.72f, center = Offset(cx + r * 0.78f, cy + r * 0.16f))
     }
 }
 
@@ -491,10 +491,10 @@ private fun DrawScope.drawFog(width: Float, height: Float, phase: Float, accent:
     for (i in 0 until 5) {
         val y = height * (0.22f + i * 0.15f)
         val shift = sin(phase * 2f * PI.toFloat() + i * 1.1f) * width * 0.10f
-        drawSoftBlob(
-            center = Offset(width * 0.5f + shift, y),
-            radius = width * 0.62f,
+        drawCircle(
             color = accent.copy(alpha = 0.12f),
+            radius = width * 0.62f,
+            center = Offset(width * 0.5f + shift, y),
         )
     }
 }
