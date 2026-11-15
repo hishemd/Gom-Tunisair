@@ -1,88 +1,70 @@
-# NewhtcDRIDI
+# Weather Sense
 
-ساعة وطقس بأسلوب شاشة **HTC Diamond (TouchFLO 3D)** لأندرويد.
-A weather clock for Android in the style of the HTC Diamond home screen.
+تطبيق طقس لأندرويد بلغة **Kotlin** و**Jetpack Compose**، بساعة **Flip Clock** و**تحديد موقعك الحالي** تلقائيًا.
 
 ---
 
 ## العربية
 
-### ما الجديد في الإصدار 1.1.0
-النسخة 1.0.0 كانت شاشة ثابتة (كل القيم مكتوبة يدويًا ولا يوجد إذن إنترنت). الآن:
+### المزايا
 
-- **ساعة حية** بتوقيت المدينة المختارة (24 أو 12 ساعة حسب إعدادات الجهاز) مع نقطتين تومضان كما في الأصل.
-- **طقس حقيقي** من [Open-Meteo](https://open-meteo.com/) بدون مفتاح API: الحرارة، الإحساس، الرطوبة، الرياح، وحالة الجو.
-- **توقعات 5 أيام** مع العظمى والصغرى.
-- **اختيار المدينة**: قائمة مدن تونسية جاهزة (تعمل دون إنترنت) + بحث عن أي مدينة في العالم.
-- **أيقونات طقس مرسومة بالكود** (شمس، قمر، غيوم، مطر، ثلج، رعد، ضباب) بحركة هادئة، دون أي اعتماد على خطوط الإيموجي.
-- **يعمل دون اتصال**: آخر بيانات ناجحة تُحفظ وتُعرض مع وقت التحديث.
-- **عربي/إنجليزي ودعم RTL** كامل.
-- **إصلاحات**: إضافة إذن `INTERNET` المفقود، معالجة هوامش النظام في أندرويد 15 (كان المحتوى قد يختفي تحت شريط الحالة)، `allowBackup=false`، أيقونة تطبيق (adaptive)، وتفعيل R8 لنسخة release.
+- **ساعة Flip Clock**: كل رقم على بطاقة منفصلة بخط مفصل في المنتصف، وتدوير ثلاثي الأبعاد (`rotationX`) عند تغيّر الرقم.
+- **تحديد الموقع الحالي**: يطلب إذن الموقع ويستخدم `FusedLocationProviderClient` بدقة عالية، مع رجوع إلى آخر موقع معروف عند تعذّر الحصول على موقع جديد، ثم تحويل الإحداثيات إلى اسم مدينة عبر `Geocoder`.
+- **طقس حقيقي** من [Open-Meteo](https://open-meteo.com/) **بدون مفتاح API**: الحرارة، الإحساس، الرطوبة، الرياح، الضغط، الشروق، الغروب، ومؤشر UV.
+- **توقعات 6 أيام** مع أيقونات مرسومة بالكود (`Canvas`) دون أي صور أو خطوط إيموجي.
+- **حالات واضحة**: تحميل، طلب إذن، خطأ مع إعادة المحاولة.
+- **زر تحديث الموقع** في أسفل الشاشة.
+- **مظهر داكن/فاتح** يتبع إعدادات النظام عبر Material 3.
 
-### تحسينات إضافية (تطوير ما بعد 1.1.0)
-- **فصل المنطق عن إطار أندرويد**: تحويلات JSON صارت عبر طبقة `Json` داخلية (تغلف `org.json`)، والاختبارات تعمل فعليًا دون أندرويد (كانت ترمي "not mocked").
-- **بحث مدينة يعمل دائمًا**: زر بحث صريح بجانب حقل الإدخال (يعمل حتى لو لوحة المفاتيح لا تملك إجراء بحث أو كانت عربية)، مع دعم IME Search، ورسالة عند كتابة أقل من حرفين.
-- **كشف حالة الشبكة**: فشل فوري عند عدم الاتصال بدل انتظار انتهاء المهلة (10 ثوانٍ)، وتمييز واضح بين "آخر تحديث" و"غير متصل".
-- **مفتاح مدينة مستقر**: `cityKey` يُشتق تلقائيًا من الإحداثيات (تقريب 4 خانات) فلا تتأثر البيانات المخزّنة أو اختيار المدينة بفروق إحداثية صغيرة.
-- **نظافة الكود**: إزالة `Key` اليدوي من `City`، توحيد وحدات الحرارة عبر `Units`، معالجة أخطاء التخزين المؤقت بشكل صريح.
+### البنية
 
-### الاستخدام
-| الإجراء | النتيجة |
-|---|---|
-| الضغط على اسم المدينة | فتح قائمة اختيار/بحث المدن |
-| الضغط على درجة الحرارة | التبديل بين °C و °F (يُحفظ) |
-| الضغط على الأيقونة أو سطر الحالة | تحديث فوري |
-
-يتحدّث الطقس تلقائيًا كل 30 دقيقة أثناء فتح التطبيق.
+```
+app/src/main/java/com/weathersense/app/
+  MainActivity.kt                 حالة واحدة (Loading/NeedsPermission/Ready/Error) + طلب إذن الموقع
+  data/model/WeatherData.kt       نماذج الطقس والتوقعات
+  location/WeatherLocationManager.kt   الموقع الحالي + تحويل الإحداثيات إلى مدينة
+  service/WeatherApiService.kt    عميل Open-Meteo وتحليل JSON
+  ui/components/FlipClock.kt      الساعة القلبتة
+  ui/screen/WeatherScreen.kt      الواجهة الرئيسية والأيقونات
+  ui/theme/Theme.kt               ألوان Material 3
+```
 
 ### البناء
-المتطلبات: JDK 17 وAndroid SDK 35.
 
 ```bash
-gradle assembleDebug          # app/build/outputs/apk/debug/app-debug.apk
-gradle testDebugUnitTest      # اختبارات الوحدة
+gradle assembleDebug
+# الناتج: app/build/outputs/apk/debug/app-debug.apk
 ```
-أو ادفع التعديلات إلى GitHub ودع الـ workflow المرفق (`.github/workflows/android.yml`) يبني الـ APK ويشغّل الاختبارات تلقائيًا.
 
-### هيكل المشروع
-```
-settings.gradle.kts     إعداد المستودع (repositories) وتضمين :app
-build.gradle.kts        إعداد الإصدارات (AGP 8.5 + Kotlin 1.9)
-gradle.properties       إعدادات البناء
-app/build.gradle.kts     إعداد وحدة التطبيق (SDK 35، R8، اختبارات)
-.github/workflows/android.yml   بناء + اختبار تلقائي على GitHub Actions
-app/src/main/java/com/newhtcdridi/weather/
-  MainActivity.kt      الشاشة: الساعة، العرض، حوار المدن، التحديث
-  WeatherApi.kt        طلبات HTTPS إلى Open-Meteo (الطقس + البحث عن المدن)
-  WeatherParser.kt     تحويل JSON إلى نماذج (قابل للاختبار)
-  Json.kt              طبقة داخلية تغلف org.json (فصل المنطق عن أندرويد)
-  NetworkState.kt      كشف حالة الاتصال بالإنترنت
-  WeatherModels.kt     City / WeatherReport / Condition (رموز WMO → أيقونة)
-  WeatherLabels.kt     نصوص حالات الجو المترجمة
-  WeatherIconView.kt   رسم الأيقونات المتحركة بـ Canvas
-  Presets.kt           مدن تونسية جاهزة
-  AppSettings.kt       المدينة والوحدة وآخر بيانات (SharedPreferences)
-app/src/test/...       اختبارات JUnit للمحلل والتحويلات وروابط الـ API
-```
-لا توجد أي مكتبات خارجية: التطبيق يستخدم إطار أندرويد فقط (`HttpURLConnection` + `org.json`).
+يتطلب JDK 21 و Android SDK 35. الإصدارات المستخدمة: AGP 9.5.1، Gradle 9.9.1، Kotlin 2.1.21، Compose BOM 2026.09.00.
 
-### مصدر البيانات والخصوصية
-- بيانات الطقس من **Open-Meteo.com** (مجانية للاستخدام غير التجاري وتتطلب الإشارة إلى المصدر؛ الرابط ظاهر أسفل الشاشة). راجع شروط الاستخدام على موقعهم قبل أي استخدام تجاري.
-- لا يطلب التطبيق إذن الموقع ولا يجمع أي بيانات؛ يُرسَل فقط خط عرض/طول المدينة المختارة إلى Open-Meteo.
+> ملاحظة: AGP 9 يجلب دعم Kotlin داخليًا، لذلك لا تُضاف إضافة `org.jetbrains.kotlin.android` يدويًا، ويكفي `org.jetbrains.kotlin.plugin.compose`.
 
-### أصل التصميم
-اللوحة اللونية والأحجام مستخرجة من الـ APK الأصلي: خلفية `#0C0E12`، نص أبيض و`#CCCCCC` و`#888888`، لون التمييز `#E0B767`، والساعة بحجم 76sp.
+### الأذونات
 
-### أفكار قادمة
-Gradle wrapper في المستودع، ودجت للشاشة الرئيسية، الموقع الحالي (GPS)، توقعات بالساعة، ترقية AGP/Kotlin، توقيع نسخة release.
+`INTERNET`، `ACCESS_NETWORK_STATE`، `ACCESS_FINE_LOCATION`، `ACCESS_COARSE_LOCATION`.
+
+### الخصوصية
+
+لا يُخزَّن الموقع على الجهاز ولا يُرسَل إلى أي خدمة غير Open-Meteo (خط العرض/الطول فقط، لتحديد الطقس). لا يوجد تتبّع ولا تحليلات.
+
+### مصدر البيانات
+
+[Open-Meteo.com](https://open-meteo.com/) — مجاني للاستخدام غير التجاري ويتطلب الإشارة إلى المصدر.
 
 ---
 
 ## English
 
-**1.1.0** turns the original static mock-up into a working app: live clock in the selected city's time zone, real weather and a 5-day forecast from Open-Meteo (no API key), a city picker (built-in Tunisian cities + worldwide search), hand-drawn animated weather icons, offline cache, Arabic/English with RTL, and fixes (missing `INTERNET` permission, Android 15 edge-to-edge insets, adaptive icon, R8 for release).
+**Weather Sense** is an Android weather app in **Kotlin + Jetpack Compose** featuring a **flip clock** and **automatic current-location detection**.
 
-- **Tap the city** to change it, **the temperature** to switch °C/°F, **the status line / icon** to refresh.
-- **Build:** JDK 17, Android SDK 35 — `gradle assembleDebug`, tests with `gradle testDebugUnitTest`.
-- **Dependencies:** none (Android framework only).
-- **Data:** [Open-Meteo.com](https://open-meteo.com/) — free for non-commercial use, attribution required (shown in the app). The app requests no location permission.
+- **Flip clock**: each digit on its own split-flap card with a hinge line and a 3D `rotationX` flip on change.
+- **Current location**: `FusedLocationProviderClient` at high accuracy, falling back to the last known location, reverse-geocoded to a city name with `Geocoder`.
+- **Real weather** from [Open-Meteo](https://open-meteo.com/) with **no API key**: temperature, feels-like, humidity, wind, pressure, sunrise, sunset and UV index.
+- **6-day forecast** with icons drawn in `Canvas` — no image assets or emoji fonts.
+- **Explicit states**: loading, permission request, and error with retry.
+- **Material 3** light/dark theming that follows the system setting.
+
+**Build:** JDK 21, Android SDK 35 — `gradle assembleDebug`. Versions: AGP 9.5.1, Gradle 9.9.1, Kotlin 2.1.21, Compose BOM 2026.09.00.
+
+**Privacy:** the location is never stored or shared with anyone except Open-Meteo (lat/lon only, to fetch the forecast). No tracking, no analytics.
