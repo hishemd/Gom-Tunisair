@@ -270,27 +270,25 @@ fun WeatherBackground(
             when (scene) {
                 WeatherScene.CLEAR_DAY -> {
                     drawSun(unit, w, palette.accent, slow.value)
-                    drawClouds(wispy, unit, w, h, drift.value, 0.9f)
                 }
 
                 WeatherScene.CLEAR_NIGHT -> {
                     drawNight(w, h, unit, stars, mid.value, palette, dark)
-                    drawClouds(wispy, unit, w, h, drift.value, 1f)
                     drawMeteor(meteor.value, w, h)
                 }
 
                 WeatherScene.CLOUDY -> {
                     drawSun(unit, w, palette.accent, slow.value, softened = true)
-                    drawClouds(clouds, unit, w, h, drift.value, 0.95f)
+                    drawClouds(clouds, unit, w, h, drift.value, 0.45f)
                 }
 
                 WeatherScene.RAIN -> {
-                    drawClouds(clouds, unit, w, h, drift.value, 1.05f)
+                    drawClouds(clouds, unit, w, h, drift.value, 0.60f)
                     drawRain(drops, w, h, fast.value)
                 }
 
                 WeatherScene.THUNDER -> {
-                    drawClouds(clouds, unit, w, h, drift.value, 1.15f)
+                    drawClouds(clouds, unit, w, h, drift.value, 0.75f)
                     drawRain(drops, w, h, fast.value)
                     if (flash.value > 0.01f) {
                         drawRect(Color.White.copy(alpha = flash.value * 0.30f))
@@ -298,7 +296,7 @@ fun WeatherBackground(
                 }
 
                 WeatherScene.SNOW -> {
-                    drawClouds(clouds, unit, w, h, drift.value, 0.75f)
+                    drawClouds(clouds, unit, w, h, drift.value, 0.50f)
                     drawSnow(flakes, w, h, mid.value)
                 }
 

@@ -66,10 +66,10 @@ fun FlipClock(
         val gap = 4.dp
         val colonWidth = 16.dp
         val available = maxWidth - colonWidth - gap * 8f
-        val cardWidth = (available / 4f).coerceIn(42.dp, 74.dp)
-        val cardHeight = cardWidth * 1.42f
+        val cardWidth = (available / 4f).coerceIn(40.dp, 66.dp)
+        val cardHeight = cardWidth * 1.34f
         val fontScale = LocalDensity.current.fontScale
-        val digitSize = ((cardHeight.value * 0.95f) / fontScale).sp
+        val digitSize = ((cardHeight.value * 1.55f) / fontScale).sp
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
