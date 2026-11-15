@@ -11,8 +11,19 @@ android {
         applicationId = "com.newhtcdridi.weather"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 3
+        versionName = "1.2.0"
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
+        }
     }
 
     compileOptions {
@@ -23,4 +34,12 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+}
+
+dependencies {
+    // No runtime dependencies on purpose: the app uses only the Android framework
+    // (HttpURLConnection + org.json) so the APK stays tiny and the build stays simple.
+    testImplementation("junit:junit:4.13.2")
+    // Real org.json implementation for local unit tests (android.jar only ships stubs).
+    testImplementation("org.json:json:20240303")
 }

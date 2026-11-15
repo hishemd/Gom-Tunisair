@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Palette recovered from the original debug APK (rgb(12,14,18), #CCC, #888, rgb(224,183,103)). -->
+    <color name="bg">#0C0E12</color>
+    <color name="panel">#141922</color>
+    <color name="panel_stroke">#1F2530</color>
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#888888</color>
+    <color name="text_tertiary">#CCCCCC</color>
+    <color name="accent">#E0B767</color>
+    <color name="ic_launcher_background">#0C0E12</color>
+</resources>

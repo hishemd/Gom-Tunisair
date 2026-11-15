@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand strings (kept exactly as in the original design, not translated) -->
+    <string name="app_name" translatable="false">NewhtcDRIDI</string>
+    <string name="brand_title" translatable="false">HTC DIAMOND</string>
+    <string name="brand_subtitle" translatable="false">3D WEATHER</string>
+    <string name="footer_brand" translatable="false">HTC DIAMOND WEATHER EXPERIENCE</string>
+    <string name="attribution" translatable="false">Weather data by Open-Meteo.com</string>
+
+    <!-- Main screen -->
+    <string name="today">TODAY</string>
+    <string name="feels_like">FEELS LIKE</string>
+    <string name="humidity">HUMIDITY</string>
+    <string name="wind">WIND</string>
+    <string name="high_low">H %1$s  ·  L %2$s</string>
+    <string name="wind_value">%1$d km/h</string>
+    <string name="humidity_value">%1$d%%</string>
+    <string name="no_value">--</string>
+
+    <!-- Status line -->
+    <string name="status_loading">UPDATING…</string>
+    <string name="status_updated">UPDATED %1$s</string>
+    <string name="status_offline">OFFLINE · LAST UPDATE %1$s</string>
+    <string name="status_no_data">NO DATA · TAP TO RETRY</string>
+
+    <!-- City picker -->
+    <string name="choose_city">CHOOSE CITY</string>
+    <string name="search_hint">Search for a city…</string>
+    <string name="search_button">Search</string>
+    <string name="search_too_short">Type at least 2 characters</string>
+    <string name="search_loading">Searching…</string>
+    <string name="search_no_results">No results</string>
+    <string name="search_error">Search failed. Check your connection.</string>
+
+    <!-- Preset cities -->
+    <string name="country_tunisia">Tunisia</string>
+    <string name="city_tunis">Tunis</string>
+    <string name="city_sfax">Sfax</string>
+    <string name="city_sousse">Sousse</string>
+    <string name="city_kairouan">Kairouan</string>
+    <string name="city_bizerte">Bizerte</string>
+    <string name="city_gabes">Gabès</string>
+    <string name="city_nabeul">Nabeul</string>
+    <string name="city_monastir">Monastir</string>
+    <string name="city_tozeur">Tozeur</string>
+    <string name="city_djerba">Djerba</string>
+    <string name="city_tataouine">Tataouine</string>
+    <string name="city_gafsa">Gafsa</string>
+    <string name="city_kef">El Kef</string>
+
+    <!-- Weather conditions (WMO weather interpretation codes) -->
+    <string name="wmo_unknown">—</string>
+    <string name="wmo_clear_sky">CLEAR SKY</string>
+    <string name="wmo_mainly_clear">MAINLY CLEAR</string>
+    <string name="wmo_partly_cloudy">PARTLY CLOUDY</string>
+    <string name="wmo_overcast">OVERCAST</string>
+    <string name="wmo_fog">FOG</string>
+    <string name="wmo_drizzle">DRIZZLE</string>
+    <string name="wmo_freezing_drizzle">FREEZING DRIZZLE</string>
+    <string name="wmo_light_rain">LIGHT RAIN</string>
+    <string name="wmo_rain">RAIN</string>
+    <string name="wmo_heavy_rain">HEAVY RAIN</string>
+    <string name="wmo_freezing_rain">FREEZING RAIN</string>
+    <string name="wmo_light_snow">LIGHT SNOW</string>
+    <string name="wmo_snow">SNOW</string>
+    <string name="wmo_heavy_snow">HEAVY SNOW</string>
+    <string name="wmo_snow_grains">SNOW GRAINS</string>
+    <string name="wmo_rain_showers">RAIN SHOWERS</string>
+    <string name="wmo_snow_showers">SNOW SHOWERS</string>
+    <string name="wmo_thunderstorm">THUNDERSTORM</string>
+    <string name="wmo_thunderstorm_hail">THUNDERSTORM WITH HAIL</string>
+</resources>
