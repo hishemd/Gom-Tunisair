@@ -4,14 +4,8 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Sun disc -->
+    <!-- Aircraft silhouette in Tunisair gold -->
     <path
-        android:fillColor="#E0B767"
-        android:pathData="M39,54a15,15 0,1 1,30 0a15,15 0,1 1,-30 0" />
-    <!-- Sun rays -->
-    <path
-        android:pathData="M76.00,54.00L84.00,54.00 M69.56,69.56L75.21,75.21 M54.00,76.00L54.00,84.00 M38.44,69.56L32.79,75.21 M32.00,54.00L24.00,54.00 M38.44,38.44L32.79,32.79 M54.00,32.00L54.00,24.00 M69.56,38.44L75.21,32.79"
-        android:strokeColor="#E0B767"
-        android:strokeLineCap="round"
-        android:strokeWidth="4.4" />
+        android:fillColor="#D4AF37"
+        android:pathData="M54,26 L58,52 L82,66 L82,71 L58,63 L58,77 L66,83 L66,87 L54,83 L42,87 L42,83 L50,77 L50,63 L26,71 L26,66 L50,52 Z" />
 </vector>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Aircraft silhouette in Tunisair gold -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M54,26 L58,52 L82,66 L82,71 L58,63 L58,77 L66,83 L66,87 L54,83 L42,87 L42,83 L50,77 L50,63 L26,71 L26,66 L50,52 Z" />
+</vector>
