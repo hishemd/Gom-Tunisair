@@ -1,5 +1,8 @@
 package com.tunisair.gom.ui
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.tunisair.gom.data.GomContent
 import com.tunisair.gom.data.model.Bookmark
 import com.tunisair.gom.util.BookmarkStore
@@ -21,21 +24,21 @@ enum class Destination(val label: String) {
  */
 class GomViewModel(store: BookmarkStore) {
 
-    var destination by androidx.compose.runtime.mutableStateOf(Destination.Home)
+    var destination: Destination by mutableStateOf(Destination.Home)
         private set
 
-    var query by androidx.compose.runtime.mutableStateOf("")
+    var query: String by mutableStateOf("")
         private set
 
     /** Chapter id currently open, or null when the chapter list is shown. */
-    var openChapter by androidx.compose.runtime.mutableStateOf<Int?>(null)
+    var openChapter: Int? by mutableStateOf(null)
         private set
 
     /** Section id expanded inside the open chapter. */
-    var openSection by androidx.compose.runtime.mutableStateOf<String?>(null)
+    var openSection: String? by mutableStateOf(null)
         private set
 
-    var bookmarks by androidx.compose.runtime.mutableStateOf(store.load())
+    var bookmarks: List<Bookmark> by mutableStateOf(store.load())
         private set
 
     val results: List<GomContent.Hit>
@@ -83,10 +86,10 @@ class GomViewModel(store: BookmarkStore) {
     }
 
     fun isBookmarked(chapterId: Int, sectionId: String) =
-        bookmarks.any { it.chapterId == chapterId && it.sectionId == sectionId }
+        bookmarks.any { bm: Bookmark -> bm.chapterId == chapterId && bm.sectionId == sectionId }
 
     fun toggleBookmark(chapterId: Int, sectionId: String, title: String, excerpt: String) {
-        val existing = bookmarks.firstOrNull { it.chapterId == chapterId && it.sectionId == sectionId }
+        val existing = bookmarks.firstOrNull { bm: Bookmark -> bm.chapterId == chapterId && bm.sectionId == sectionId }
         bookmarks = if (existing != null) {
             bookmarks - existing
         } else {
@@ -96,7 +99,7 @@ class GomViewModel(store: BookmarkStore) {
     }
 
     fun removeBookmark(chapterId: Int, sectionId: String) {
-        bookmarks = bookmarks.filterNot { it.chapterId == chapterId && it.sectionId == sectionId }
+        bookmarks = bookmarks.filterNot { bm: Bookmark -> bm.chapterId == chapterId && bm.sectionId == sectionId }
         store.save(bookmarks)
     }
 
@@ -107,7 +110,7 @@ class GomViewModel(store: BookmarkStore) {
 
     fun excerptOf(chapterId: Int, sectionId: String): String {
         val chapter = GomContent.chapterById(chapterId) ?: return ""
-        val section = chapter.sections.firstOrNull { it.id == sectionId } ?: return ""
+        val section = chapter.sections.firstOrNull { sec: GomContent.Section -> sec.id == sectionId } ?: return ""
         return section.content.replace('\n', ' ').trim().take(160)
     }
 }
